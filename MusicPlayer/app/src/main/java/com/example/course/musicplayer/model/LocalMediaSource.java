@@ -50,9 +50,6 @@ public class LocalMediaSource implements MusicProviderSource {
     private static final String TAG = LogHelper.makeLogTag(LocalMediaSource.class);
     private Context mContext;
 
-    protected static final String CATALOG_URL =
-        "http://storage.googleapis.com/automotive-media/music.json";
-
     private static final String JSON_MUSIC = "music";
     private static final String JSON_TITLE = "title";
     private static final String JSON_ALBUM = "album";
@@ -83,23 +80,7 @@ public class LocalMediaSource implements MusicProviderSource {
 
                     if (cursor.moveToFirst()) {
                         do {
-                            String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
-                            String singer = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                            String album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
-                            String albumId = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-                            long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.SIZE));
-                            int duration = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
-                            String url = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
-                            MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
-                                    .setMediaId(createMediaID(null, MEDIA_ID_MUSICS_BY_ALBUM, album))
-                                    .setTitle(album)
-                                    .setSubtitle("This is Test sub title")
-                                    .build();
-                            MediaBrowserCompat.MediaItem testItem = new MediaBrowserCompat.MediaItem(description, MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
-
-
                             tracks.add(buildFromCursor(cursor));
-
                         } while (cursor.moveToNext());
                     }
                 }
@@ -114,11 +95,11 @@ public class LocalMediaSource implements MusicProviderSource {
         String singer = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
         String album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
         String albumId = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-        Log.v("Nick", "ablumid is : " + albumId);
+
         long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.SIZE));
         int duration = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
         String url = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
-
+        Log.v("Nick", "data of url  is : " + url);
         String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
 
         LogHelper.d(TAG, "Found music track: ", cursor.toString());
@@ -132,7 +113,7 @@ public class LocalMediaSource implements MusicProviderSource {
         //noinspection ResourceType
         return new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id)
-                .putString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE, "")
+                .putString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE, url)
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)

@@ -17,6 +17,9 @@ package com.example.course.musicplayer;
  import android.support.v4.media.session.PlaybackStateCompat;
 
  import com.example.course.musicplayer.model.MusicProvider;
+ import com.example.course.musicplayer.playback.LocalPlayback;
+ import com.example.course.musicplayer.playback.PlaybackManager;
+ import com.example.course.musicplayer.playback.QueueManager;
  import com.example.course.musicplayer.utils.LogHelper;
 
 
@@ -57,11 +60,12 @@ package com.example.course.musicplayer;
   *      android.media.browse.MediaBrowserService
 
   */
- public class MusicService extends MediaBrowserServiceCompat {
+ public class MusicService extends MediaBrowserServiceCompat implements PlaybackManager.PlaybackServiceCallback {
 
      private static final String TAG = LogHelper.makeLogTag(MusicService.class);
 
      private MusicProvider mMusicProvider;
+     private PlaybackManager mPlaybackManager;
 
      private MediaSessionCompat mSession;
 
@@ -81,11 +85,42 @@ package com.example.course.musicplayer;
          // {@link #onLoadChildren(String, Result<List<MediaItem>>) onLoadChildren()}.
          mMusicProvider.retrieveMediaAsync(null /* Callback */);
 
+         QueueManager queueManager = new QueueManager(mMusicProvider, getResources(),
+                 new QueueManager.MetadataUpdateListener() {
+                     @Override
+                     public void onMetadataChanged(MediaMetadataCompat metadata) {
+                         mSession.setMetadata(metadata);
+                     }
 
+                     @Override
+                     public void onMetadataRetrieveError() {
+                         // TODO：show Error message
+                         mPlaybackManager.updatePlaybackState(
+                                 getString(R.string.error_no_metadata));
+                     }
+
+                     @Override
+                     public void onCurrentQueueIndexUpdated(int queueIndex) {
+                         mPlaybackManager.handlePlayRequest();
+                     }
+
+                     @Override
+                     public void onQueueUpdated(String title, List<MediaSessionCompat.QueueItem> newQueue) {
+                         mSession.setQueue(newQueue);
+                         mSession.setQueueTitle(title);
+                     }
+                 });
+
+
+         LocalPlayback playback = new LocalPlayback(this, mMusicProvider);
+         mPlaybackManager = new PlaybackManager(this, getResources(), queueManager, mMusicProvider, playback);
          // Start a new MediaSession
          mSession = new MediaSessionCompat(this, "MusicService");
          setSessionToken(mSession.getSessionToken());
-
+         mSession.setCallback(mPlaybackManager.getMediaSessionCallback());
+         mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+         mPlaybackManager.updatePlaybackState(null);
      }
 
      /**
@@ -106,6 +141,8 @@ package com.example.course.musicplayer;
      @Override
      public void onDestroy() {
          LogHelper.d(TAG, "onDestroy");
+         mPlaybackManager.handleStopRequest(null);
+         mSession.release();
      }
 
      @Override
@@ -123,19 +160,26 @@ package com.example.course.musicplayer;
          result.sendResult(mMusicProvider.getChildren(parentMediaId, getResources()));
      }
 
-//     /**
-//      * Callback method called from PlaybackManager whenever the music is about to play.
-//      */
-//     @Override
-//     public void onPlaybackStart() {
-//         if (!mSession.isActive()) {
-//             mSession.setActive(true);
-//         }
-//         // The service needs to continue running even after the bound client (usually a
-//         // MediaController) disconnects, otherwise the music playback will stop.
-//         // Calling startService(Intent) will keep the service running until it is explicitly killed.
-//         startService(new Intent(getApplicationContext(), MusicService.class));
-//     }
-//
+     @Override
+     public void onPlaybackStart() {
+         if (!mSession.isActive()) {
+             mSession.setActive(true);
+         }
+         startService(new Intent(getApplicationContext(), MusicService.class));
+     }
 
+     @Override
+     public void onNotificationRequired() {
+        // TODO : start notification when it's ready.
+     }
+
+     @Override
+     public void onPlaybackStop() {
+        stopForeground(true);
+     }
+
+     @Override
+     public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
+        mSession.setPlaybackState(newState);
+     }
 }

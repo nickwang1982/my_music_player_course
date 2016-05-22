@@ -93,8 +93,8 @@ public class MusicPlayerActivity extends ExtendBaseActivity
     public void onMediaItemSelected(MediaBrowserCompat.MediaItem item) {
         LogHelper.d(TAG, "onMediaItemSelected, mediaId=" + item.getMediaId());
         if (item.isPlayable()) {
-//            getSupportMediaController().getTransportControls()
-//                    .playFromMediaId(item.getMediaId(), null);
+            getSupportMediaController().getTransportControls()
+                    .playFromMediaId(item.getMediaId(), null);
         } else if (item.isBrowsable()) {
             navigateToBrowser(item.getMediaId());
         } else {

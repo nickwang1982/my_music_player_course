@@ -1,6 +1,7 @@
 package com.example.course.musicplayer.utils;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.Arrays;
 
@@ -97,6 +98,7 @@ public class MediaIDHelper {
     public static String extractBrowseCategoryValueFromMediaID(@NonNull String mediaID) {
         String[] hierarchy = getHierarchy(mediaID);
         if (hierarchy.length == 2) {
+            Log.v("Nick" , "extract browse gategrory is : " + hierarchy[1]);
             return hierarchy[1];
         }
         return null;

@@ -26,7 +26,12 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             app:cardElevation="8dp">
-
+            <fragment android:name="com.example.course.musicplayer.ui.PlaybackControlsFragment"
+                android:id="@+id/fragment_playback_controls"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                tools:layout="@layout/fragment_playback_controls" />
         </android.support.v7.widget.CardView>
     </RelativeLayout>
     <android.support.design.widget.NavigationView
